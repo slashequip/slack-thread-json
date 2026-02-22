@@ -83,9 +83,12 @@ async function extractThreadAsync() {
       const author = extractAuthor(msgEl);
       const timestamp = extractTimestamp(msgEl);
       const text = extractText(msgEl);
+      const reactions = extractReactions(msgEl);
 
       if (text) {
-        messagesById.set(ts, { author, timestamp, text });
+        const msg = { author, timestamp, text };
+        if (reactions.length > 0) msg.reactions = reactions;
+        messagesById.set(ts, msg);
       }
     }
 
@@ -148,17 +151,20 @@ function extractVisibleMessages(drawer) {
     const author = extractAuthor(msgEl);
     const timestamp = extractTimestamp(msgEl);
     const text = extractText(msgEl);
+    const reactions = extractReactions(msgEl);
 
     if (author !== "Unknown") {
       lastAuthor = author;
     }
 
     if (text) {
-      messages.push({
+      const msg = {
         author: author !== "Unknown" ? author : lastAuthor,
         timestamp,
         text,
-      });
+      };
+      if (reactions.length > 0) msg.reactions = reactions;
+      messages.push(msg);
     }
   }
 
@@ -226,6 +232,23 @@ function extractText(msgEl) {
   }
 
   return null;
+}
+
+function extractReactions(msgEl) {
+  const reactions = [];
+  const reactionButtons = msgEl.querySelectorAll('[data-qa="reactji"]');
+  for (const btn of reactionButtons) {
+    const img = btn.querySelector("img[data-stringify-emoji]");
+    const countEl = btn.querySelector(".c-reaction__count");
+    if (img && countEl) {
+      const emoji = img.getAttribute("data-stringify-emoji") || img.alt || "";
+      const count = parseInt(countEl.textContent.trim(), 10) || 0;
+      if (emoji && count > 0) {
+        reactions.push({ emoji, count });
+      }
+    }
+  }
+  return reactions;
 }
 
 function cleanText(el) {

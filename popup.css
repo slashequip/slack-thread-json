@@ -30,6 +30,20 @@ h1 {
   color: #1264a3;
 }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #616061;
+}
+
+.toggle input {
+  margin: 0;
+}
+
 button {
   width: 100%;
   padding: 8px 16px;

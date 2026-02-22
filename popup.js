@@ -1,8 +1,18 @@
 const statusEl = document.getElementById("status");
 const copyBtn = document.getElementById("copy-btn");
 const feedbackEl = document.getElementById("feedback");
+const reactionsToggle = document.getElementById("reactions-toggle");
 
 let threadData = null;
+
+// Restore toggle state
+chrome.storage.local.get({ includeReactions: true }, (result) => {
+  reactionsToggle.checked = result.includeReactions;
+});
+
+reactionsToggle.addEventListener("change", () => {
+  chrome.storage.local.set({ includeReactions: reactionsToggle.checked });
+});
 
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -67,7 +77,15 @@ copyBtn.addEventListener("click", async () => {
   if (!threadData) return;
 
   try {
-    const json = JSON.stringify(threadData, null, 2);
+    let output = threadData;
+    if (!reactionsToggle.checked) {
+      output = {
+        thread: {
+          messages: threadData.thread.messages.map(({ reactions, ...rest }) => rest),
+        },
+      };
+    }
+    const json = JSON.stringify(output, null, 2);
     await navigator.clipboard.writeText(json);
     showFeedback("Copied to clipboard!", "success");
   } catch {
